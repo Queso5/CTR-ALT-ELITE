@@ -26,4 +26,6 @@ yarn-debug.log*
 # Ignore backend folder
 /Backend/
 
+/re.txt
+
 
