@@ -20,4 +20,9 @@ README.old1.md
 
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
+ yarn-error.log*
+
+# Ignore backend folder
+/Backend/
+
+
