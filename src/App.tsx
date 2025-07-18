@@ -9,6 +9,7 @@ import KanbanBoard from "./components/KanbanBoard";
 import Admin from "./pages/Admin";
 // import Demo from "./pages/Demo";
 import NotFound from "./pages/NotFound";
+import RegisterPage from "./components/RegisterPage";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/kanban" element={<KanbanBoard />} />
           <Route path="/dashboard" element={<KanbanBoard />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/register" element={<RegisterPage />} />
           {/* <Route path="/demo" element={<Demo />} /> */}
           <Route path="*" element={<NotFound />} />
         </Routes>
