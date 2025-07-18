@@ -1,3 +1,5 @@
+  // State for active domain filter
+  const [activeDomain, setActiveDomain] = useState<string>('');
 import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -52,6 +54,11 @@ const columns = [
 ];
 
 function KanbanBoard() {
+  // Search bar state and suggestions
+  const [searchValue, setSearchValue] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showFilter, setShowFilter] = useState(false);
+  const domainSuggestions = ['AI', 'Healthcare', 'Automation', 'IPR', 'Startup', 'Growth', 'Patent', 'Commercialization'];
   const [projects, setProjects] = useState<KanbanProject[]>(initialProjects);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<KanbanProject | null>(null);
@@ -137,7 +144,7 @@ Key milestones include: ${timelineEvents.map(e => e.label).join(', ')}.`;
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-2">
       {/* Navigation Bar */}
-      <nav className="flex items-center justify-between max-w-5xl mx-auto mb-8 px-4 py-3 bg-white rounded-xl shadow border border-gray-100">
+      <nav className="flex items-center justify-between max-w-screen-xl mx-auto mb-8 px-16 py-3 bg-white rounded-xl shadow border border-gray-100">
         <div className="flex items-center gap-3">
           <span className="p-2 bg-blue-400 rounded-lg shadow">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -147,6 +154,60 @@ Key milestones include: ${timelineEvents.map(e => e.label).join(', ')}.`;
           <span className="text-2xl font-bold text-gray-900">NexusFlow</span>
         </div>
         <div className="flex items-center gap-2">
+          {/* Search Bar with filter funnel and suggestions */}
+          <div className="relative" style={{ minWidth: '160px', maxWidth: '200px' }}>
+            <input
+              type="text"
+              placeholder="Search..."
+              className="pl-8 pr-10 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm transition-all w-full"
+              style={{ height: '40px' }}
+              onFocus={e => setShowSuggestions(true)}
+              onBlur={e => setTimeout(() => setShowSuggestions(false), 150)}
+              onChange={e => setSearchValue(e.target.value)}
+              value={searchValue}
+            />
+            {/* Magnifying lens icon */}
+            <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" fill="none" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" strokeWidth="2" />
+              </svg>
+            </span>
+            {/* Funnel filter icon */}
+            <button
+              type="button"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-500 hover:text-blue-700"
+              title="Filter options"
+              onClick={() => setShowFilter(true)}
+            >
+              {/* Upgraded funnel icon - modern look */}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="3 4 21 4 14 14 14 19 10 19 10 14 3 4" fill="#3b82f6" stroke="#2563eb" />
+                <rect x="10" y="19" width="4" height="2" rx="1" fill="#2563eb" />
+              </svg>
+            </button>
+            {/* Suggestions dropdown */}
+            {showSuggestions && (
+              <div className="absolute left-0 top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+            {domainSuggestions.filter(s => s.toLowerCase().includes(searchValue.toLowerCase())).map(suggestion => (
+              <div
+                key={suggestion}
+                className="px-4 py-2 cursor-pointer hover:bg-blue-50 text-gray-700"
+                onMouseDown={() => {
+                  setSearchValue(suggestion);
+                  setShowSuggestions(false);
+                  setActiveDomain(suggestion);
+                }}
+              >
+                {suggestion}
+              </div>
+            ))}
+                {domainSuggestions.filter(s => s.toLowerCase().includes(searchValue.toLowerCase())).length === 0 && (
+                  <div className="px-4 py-2 text-gray-400">No suggestions</div>
+                )}
+              </div>
+            )}
+          </div>
           <Button variant="outline" className="flex items-center gap-1"><span>🏠</span> Home</Button>
           <Button variant="outline" className="flex items-center gap-1" onClick={() => openModal({id: '', title: '', description: '', status: columns[0].key, tags: [], collaborators: []})}><span>➕</span> New Project</Button>
           <Button variant="outline" className="flex items-center gap-1"><span>👤</span> Profile</Button>
@@ -156,98 +217,104 @@ Key milestones include: ${timelineEvents.map(e => e.label).join(', ')}.`;
       {/* Removed Kanban Board Title for cleaner look */}
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {columns.map(col => (
-            <Droppable droppableId={col.key} key={col.key}>
-              {(provided) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className="rounded-xl shadow-lg p-4 bg-white border border-gray-100"
-                >
-                  <h3 className="text-xl font-bold mb-4 text-gray-900 flex items-center gap-2">
-                    <span className="text-2xl">{col.icon}</span> {col.label}
-                  </h3>
-                  {projects.filter(p => p.status === col.key).length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-8">
-                      <span className="text-gray-300 text-6xl mb-2">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M13 2L3 14H12L11 22L21 10H13L13 2Z" fill="#dbeafe" />
-                        </svg>
-                      </span>
-                      <Button variant="outline" className="flex items-center gap-2" onClick={() => openModal({id: '', title: '', description: '', status: col.key, tags: [], collaborators: []})}>
-                        <span>➕</span> Add Card
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      {projects.filter(p => p.status === col.key).map((p, idx) => (
-                        <Draggable draggableId={p.id} index={idx} key={p.id}>
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              className={`mb-4 ${snapshot.isDragging ? 'scale-105 shadow-2xl' : ''}`}
-                              onClick={() => openModal(p)}
-                            >
-                              <Card className="border border-gray-200 bg-white cursor-pointer hover:shadow-lg transition">
-                                {/* Card header with title, description, tags, and budget */}
-                                <CardHeader className="flex flex-col gap-2">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-lg">{col.icon}</span>
-                                    <CardTitle className="text-base font-semibold text-gray-900 truncate">{p.title}</CardTitle>
-                                  </div>
-                                  <div className="text-sm text-gray-500 line-clamp-2">{p.description}</div>
-                                  <div className="flex flex-wrap gap-2 mt-1">
-                                    {p.tags.map(tag => (
-                                      <span key={tag} className="inline-block px-2 py-1 rounded bg-blue-100 text-blue-800 text-xs font-semibold whitespace-nowrap">{tag}</span>
-                                    ))}
-                                  </div>
-                                  {p.budget && (
-                                    <div className="mt-2 text-xs text-green-700 font-semibold">Budget: {p.budget}</div>
-                                  )}
-                                  {/* Project Progress Bar - blue throughout */}
-                                  <div className="mt-3 flex flex-col items-center justify-center w-full">
-                                    <span className="text-xs text-blue-700 font-bold mb-1">Project Progress</span>
-                                    <div className="relative w-80 h-20 flex flex-col items-center justify-center">
-                                      {/* Strikethrough bar */}
-                                      <div className="absolute top-1/2 left-0 w-full h-2 -translate-y-1/2 bg-blue-200 rounded-full z-0"></div>
-                                      {/* Progress fill */}
-                                      <div className="absolute top-1/2 left-0 h-2 -translate-y-1/2 rounded-full z-10 transition-all duration-500" style={{ width: `${p.status === 'Idea & Research' ? '0%' : p.status === 'IPR Filing' ? '33%' : p.status === 'Startup / Commercialization' ? '66%' : p.status === 'Profitable Business' ? '100%' : '0%'}`, background: '#2563eb' }}></div>
-                                      {/* Milestone numbers */}
-                                      <div className="relative w-full flex justify-between items-center z-20">
-                                        {[0, 1, 2, 3].map(idx => {
-                                          const phases = ['Idea & Research', 'IPR Filing', 'Startup / Commercialization', 'Profitable Business'];
-                                          const labels = ['Ideate', 'Build', 'Launch', 'Grow'];
-                                          const active = phases.indexOf(p.status) >= idx;
-                                          return (
-                                            <div key={phases[idx]} className="flex flex-col items-center w-1/4">
-                                              <span className={`relative z-30 text-lg font-bold rounded-full w-8 h-8 flex items-center justify-center ${active ? 'bg-blue-500 text-white shadow-lg' : 'bg-blue-200 text-blue-500'}`}>{idx + 1}</span>
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                      {/* Labels below numbers */}
-                                      <div className="absolute left-0 top-16 w-full flex justify-between items-center z-30">
-                                        {['Ideate', 'Build', 'Launch', 'Grow'].map((label, idx) => (
-                                          <span key={label} className="text-lg font-semibold text-blue-700 w-1/4 text-center">{label}</span>
-                                        ))}
+          {columns.map(col => {
+            // Filter projects by activeDomain or searchValue
+            let filteredProjects = projects.filter(p => p.status === col.key);
+            const domain = activeDomain || searchValue;
+            if (domain) {
+              filteredProjects = filteredProjects.filter(p =>
+                p.tags.some(tag => tag.toLowerCase() === domain.toLowerCase())
+              );
+            }
+            return (
+              <Droppable droppableId={col.key} key={col.key}>
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className="rounded-xl shadow-lg p-4 bg-white border border-gray-100"
+                  >
+                    <h3 className="text-xl font-bold mb-4 text-gray-900 flex items-center gap-2">
+                      <span className="text-2xl">{col.icon}</span> {col.label}
+                    </h3>
+                    {filteredProjects.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-8">
+                        <span className="text-gray-300 text-6xl mb-2">
+                          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M13 2L3 14H12L11 22L21 10H13L13 2Z" fill="#dbeafe" />
+                          </svg>
+                        </span>
+                        <div className="text-blue-500 font-semibold mb-2">no projects in the domain found</div>
+                        <Button variant="outline" className="flex items-center gap-2" onClick={() => openModal({id: '', title: '', description: '', status: col.key, tags: [], collaborators: []})}>
+                          <span>➕</span> Add Card
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        {filteredProjects.map((p, idx) => (
+                          <Draggable draggableId={p.id} index={idx} key={p.id}>
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className={`mb-4 ${snapshot.isDragging ? 'scale-105 shadow-2xl' : ''}`}
+                                onClick={() => openModal(p)}
+                              >
+                                <Card className="border border-gray-200 bg-white cursor-pointer hover:shadow-lg transition">
+                                  {/* ...existing code... */}
+                                  <CardHeader className="flex flex-col gap-2">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-lg">{col.icon}</span>
+                                      <CardTitle className="text-base font-semibold text-gray-900 truncate">{p.title}</CardTitle>
+                                    </div>
+                                    <div className="text-sm text-gray-500 line-clamp-2">{p.description}</div>
+                                    <div className="flex flex-wrap gap-2 mt-1">
+                                      {p.tags.map(tag => (
+                                        <span key={tag} className="inline-block px-2 py-1 rounded bg-blue-100 text-blue-800 text-xs font-semibold whitespace-nowrap">{tag}</span>
+                                      ))}
+                                    </div>
+                                    {p.budget && (
+                                      <div className="mt-2 text-xs text-green-700 font-semibold">Budget: {p.budget}</div>
+                                    )}
+                                    <div className="mt-3 flex flex-col items-center justify-center w-full">
+                                      <span className="text-xs text-blue-700 font-bold mb-1">Project Progress</span>
+                                      <div className="relative w-80 h-20 flex flex-col items-center justify-center">
+                                        <div className="absolute top-1/2 left-0 w-full h-2 -translate-y-1/2 bg-blue-200 rounded-full z-0"></div>
+                                        <div className="absolute top-1/2 left-0 h-2 -translate-y-1/2 rounded-full z-10 transition-all duration-500" style={{ width: `${p.status === 'Idea & Research' ? '0%' : p.status === 'IPR Filing' ? '33%' : p.status === 'Startup / Commercialization' ? '66%' : p.status === 'Profitable Business' ? '100%' : '0%'}`, background: '#2563eb' }}></div>
+                                        <div className="relative w-full flex justify-between items-center z-20">
+                                          {[0, 1, 2, 3].map(idx => {
+                                            const phases = ['Idea & Research', 'IPR Filing', 'Startup / Commercialization', 'Profitable Business'];
+                                            const labels = ['Ideate', 'Build', 'Launch', 'Grow'];
+                                            const active = phases.indexOf(p.status) >= idx;
+                                            return (
+                                              <div key={phases[idx]} className="flex flex-col items-center w-1/4">
+                                                <span className={`relative z-30 text-lg font-bold rounded-full w-8 h-8 flex items-center justify-center ${active ? 'bg-blue-500 text-white shadow-lg' : 'bg-blue-200 text-blue-500'}`}>{idx + 1}</span>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                        <div className="absolute left-0 top-16 w-full flex justify-between items-center z-30">
+                                          {['Ideate', 'Build', 'Launch', 'Grow'].map((label, idx) => (
+                                            <span key={label} className="text-lg font-semibold text-blue-700 w-1/4 text-center">{label}</span>
+                                          ))}
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                </CardHeader>
-                              </Card>
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </>
-                  )}
-                </div>
-              )}
-            </Droppable>
-          ))}
+                                  </CardHeader>
+                                </Card>
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </>
+                    )}
+                  </div>
+                )}
+              </Droppable>
+            );
+          })}
         </div>
       </DragDropContext>
       <ReactModal
