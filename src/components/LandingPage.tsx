@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../lib/firebase"; // Adjust path if needed
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,17 +14,36 @@ const LandingPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  // Firebase Auth sign-in and pass real ID token to backend
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (email && password) {
       if (activeTab === 'innovator') {
-        if (email.includes("admin")) {
-          navigate("/admin");
-        } else {
-          navigate("/dashboard");
+        try {
+          // Sign in with Firebase Auth
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          const idToken = await userCredential.user.getIdToken();
+          console.log("ID Token:", idToken); // Copy this from browser console for Postman
+
+          // Call backend API for authentication
+          const response = await fetch('https://us-central1-nexusflow-5c857.cloudfunctions.net/verify_token_and_role', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken, role: 'innovator' })
+          });
+          const data = await response.json();
+          console.log("Backend response:", data); // Log backend response
+          if (response.ok && data.status === 'success') {
+            navigate('/dashboard');
+          } else {
+            alert(data.error || 'Login failed');
+          }
+        } catch (err) {
+          console.log("Login error:", err); // Log login error
+          alert('Authentication failed');
         }
       } else {
-        navigate("/dashboard");
+        navigate('/dashboard');
       }
     }
   };
@@ -47,7 +68,7 @@ const LandingPage = () => {
               Innovation Made Easy
             </h2>
             <p className="text-xl text-gray-500">
-              track ideas, collaborate with teams, and bring your innovations to life
+              Track ideas, collaborate with teams, and bring your innovations to life
             </p>
           </div>
         </header>
@@ -117,6 +138,9 @@ const LandingPage = () => {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </form>
+              <div className="text-center mt-4">
+                <a href="/register" className="text-blue-500 hover:underline">Don't have an account? Register here</a>
+              </div>
             </CardContent>
           </Card>
         </div>
