@@ -66,6 +66,10 @@ function KanbanBoard() {
   const [insightOpen, setInsightOpen] = useState(false);
   const [insightContent, setInsightContent] = useState('');
 
+  // Budget filter state
+  const [budgetFilter, setBudgetFilter] = useState(5000000);
+  const [budgetFilterActive, setBudgetFilterActive] = useState(false);
+
   // Document upload state
   const [attachedDocs, setAttachedDocs] = useState([
     { name: 'market-research.pdf', size: '2.4 MB', date: '2024-01-18', tag: 'Idea & Research' },
@@ -185,6 +189,39 @@ Key milestones include: ${timelineEvents.map(e => e.label).join(', ')}.`;
                 <rect x="10" y="19" width="4" height="2" rx="1" fill="#2563eb" />
               </svg>
             </button>
+            {/* Budget Filter Slider Modal */}
+            {showFilter && (
+              <ReactModal
+                isOpen={showFilter}
+                onRequestClose={() => setShowFilter(false)}
+                ariaHideApp={false}
+                className="max-w-md w-full mx-auto mt-16 bg-white rounded-xl shadow-2xl outline-none p-8 flex flex-col items-center justify-center"
+                overlayClassName="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+              >
+                <div className="w-full flex flex-col items-center justify-center">
+                  <div className="text-lg font-semibold mb-4 text-gray-900">Filter by Budget</div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Budget Range ($)</label>
+                  <input
+                    type="range"
+                    min={0}
+                    max={5000000}
+                    step={10000}
+                    value={budgetFilter}
+                    onChange={e => setBudgetFilter(Number(e.target.value))}
+                    className="w-full mb-2"
+                  />
+                  <div className="flex justify-between w-full text-xs text-gray-500 mt-1">
+                    <span>$0</span>
+                    <span>$5,000,000</span>
+                  </div>
+                  <div className="mt-4 text-blue-700 font-bold">Selected: ${budgetFilter.toLocaleString()}</div>
+                  <div className="flex gap-2 mt-6">
+                    <Button onClick={() => { setBudgetFilterActive(true); setShowFilter(false); }} className="bg-blue-500 hover:bg-blue-600 text-white">Apply</Button>
+                    <Button onClick={() => { setBudgetFilter(5000000); setBudgetFilterActive(false); setShowFilter(false); }} variant="outline">Reset</Button>
+                  </div>
+                </div>
+              </ReactModal>
+            )}
             {/* Suggestions dropdown */}
             {showSuggestions && (
               <div className="absolute left-0 top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50">
@@ -217,13 +254,21 @@ Key milestones include: ${timelineEvents.map(e => e.label).join(', ')}.`;
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {columns.map(col => {
-            // Filter projects by activeDomain or searchValue
+            // Filter projects by activeDomain/searchValue and budget
             let filteredProjects = projects.filter(p => p.status === col.key);
             const domain = activeDomain || searchValue;
             if (domain) {
               filteredProjects = filteredProjects.filter(p =>
                 p.tags.some(tag => tag.toLowerCase() === domain.toLowerCase())
               );
+            }
+            if (budgetFilterActive) {
+              filteredProjects = filteredProjects.filter(p => {
+                if (!p.budget) return false;
+                // Remove $ and commas, parse as number
+                const num = Number(p.budget.replace(/[$,]/g, ''));
+                return !isNaN(num) && num <= budgetFilter;
+              });
             }
             return (
               <Droppable droppableId={col.key} key={col.key}>
