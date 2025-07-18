@@ -1,151 +1,61 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Paperclip, Link2, LogOut, Zap } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-
-interface Project {
+type Project = {
   id: string;
   title: string;
-  status: "idea" | "ipr" | "startup";
+  milestone?: number; // 0: not started, 1: research done, 2: IPR done, 3: commercialised
+};
+
+// Minimal milestone label
+function getMilestoneLabel(milestone?: number) {
+  switch (milestone) {
+    case 1: return "Research Completed";
+    case 2: return "IPR Filing Completed";
+    case 3: return "Commercialised";
+    default: return "Not Started";
+  }
 }
 
+// Minimal ProjectCard
+const ProjectCard = ({ project }: { project: Project }) => (
+  <div className="mb-6 p-4 border rounded-lg bg-white shadow">
+    <div className="text-lg font-bold mb-2">{project.title}</div>
+    <div className="mb-2 text-sm text-gray-500">Milestone: {getMilestoneLabel(project.milestone)}</div>
+    <div className="flex flex-row items-center w-64 h-10 rounded-full border-4 border-blue-500 bg-gray-100 shadow overflow-hidden">
+      <div className={`flex flex-col items-center justify-center w-1/3 h-full ${project.milestone >= 1 ? 'bg-blue-200' : 'bg-gray-200'}`}>
+        <span className={`text-lg ${project.milestone >= 1 ? 'text-blue-700' : 'text-gray-400'}`}>🔬</span>
+        <span className={`text-xs font-semibold ${project.milestone >= 1 ? 'text-blue-700' : 'text-gray-400'}`}>P1</span>
+      </div>
+      <div className={`flex flex-col items-center justify-center w-1/3 h-full ${project.milestone >= 2 ? 'bg-purple-200' : 'bg-gray-200'}`}>
+        <span className={`text-lg ${project.milestone >= 2 ? 'text-purple-700' : 'text-gray-400'}`}>📄</span>
+        <span className={`text-xs font-semibold ${project.milestone >= 2 ? 'text-purple-700' : 'text-gray-400'}`}>P2</span>
+      </div>
+      <div className={`flex flex-col items-center justify-center w-1/3 h-full ${project.milestone >= 3 ? 'bg-green-200' : 'bg-gray-200'}`}>
+        <span className={`text-lg ${project.milestone >= 3 ? 'text-green-700' : 'text-gray-400'}`}>🚀</span>
+        <span className={`text-xs font-semibold ${project.milestone >= 3 ? 'text-green-700' : 'text-gray-400'}`}>P3</span>
+      </div>
+    </div>
+  </div>
+);
+
 const InnovatorDashboard = () => {
-  const navigate = useNavigate();
-  const [projects, setProjects] = useState<Project[]>([
-    { id: "1", title: "AI-Powered Healthcare Monitor", status: "idea" },
-    { id: "2", title: "Smart City Traffic System", status: "ipr" },
-    { id: "3", title: "Sustainable Energy Storage", status: "startup" },
-    { id: "4", title: "Voice-Controlled IoT Platform", status: "idea" },
+  const [projects] = useState<Project[]>([
+    { id: "1", title: "AI-Powered Healthcare Monitor", milestone: 1 },
+    { id: "2", title: "Smart City Traffic System", milestone: 2 },
+    { id: "3", title: "Sustainable Energy Storage", milestone: 3 },
+    { id: "4", title: "Voice-Controlled IoT Platform", milestone: 1 },
   ]);
 
-  const handleLogout = () => {
-    navigate("/");
-  };
-
-  const handleCreateProject = () => {
-    const newProject: Project = {
-      id: Date.now().toString(),
-      title: "New Innovation Project",
-      status: "idea"
-    };
-    setProjects([...projects, newProject]);
-  };
-
-  const getProjectsByStatus = (status: Project["status"]) => {
-    return projects.filter(project => project.status === status);
-  };
-
-  const getStatusLabel = (status: Project["status"]) => {
-    switch (status) {
-      case "idea": return "Idea & Research";
-      case "ipr": return "IPR Filing";
-      case "startup": return "Startup / Commercialization";
-    }
-  };
-
-  const ProjectCard = ({ project }: { project: Project }) => (
-    <Card className="mb-4 border-border/50 bg-card hover:shadow-glow transition-smooth cursor-move">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg text-foreground">{project.title}</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="flex justify-between items-center">
-          <div className="flex space-x-2">
-            <Button size="sm" variant="outline" className="p-2">
-              <Paperclip className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="outline" className="p-2">
-              <Link2 className="h-4 w-4" />
-            </Button>
-          </div>
-          <Badge variant="secondary" className="bg-primary/10 text-primary">
-            {getStatusLabel(project.status)}
-          </Badge>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-gradient-primary rounded-lg">
-                <Zap className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <h1 className="text-2xl font-bold text-foreground">NexusFlow</h1>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <span className="text-foreground">Welcome, Jane Doe!</span>
-              <Button onClick={handleLogout} variant="outline">
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Dashboard */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Idea & Research Column */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-foreground">Idea & Research</h2>
-              <Badge variant="secondary">{getProjectsByStatus("idea").length}</Badge>
-            </div>
-            <div className="space-y-4">
-              {getProjectsByStatus("idea").map((project) => (
-                <ProjectCard key={project.id} project={project} />
-              ))}
-            </div>
-          </div>
-
-          {/* IPR Filing Column */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-foreground">IPR Filing</h2>
-              <Badge variant="secondary">{getProjectsByStatus("ipr").length}</Badge>
-            </div>
-            <div className="space-y-4">
-              {getProjectsByStatus("ipr").map((project) => (
-                <ProjectCard key={project.id} project={project} />
-              ))}
-            </div>
-          </div>
-
-          {/* Startup / Commercialization Column */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-foreground">Startup / Commercialization</h2>
-              <Badge variant="secondary">{getProjectsByStatus("startup").length}</Badge>
-            </div>
-            <div className="space-y-4">
-              {getProjectsByStatus("startup").map((project) => (
-                <ProjectCard key={project.id} project={project} />
-              ))}
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {/* Floating Action Button */}
-      <Button
-        onClick={handleCreateProject}
-        className="fixed bottom-8 right-8 h-14 w-14 rounded-full bg-gradient-primary hover:shadow-glow text-primary-foreground border-0 shadow-lg"
-        size="icon"
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
+    <div className="min-h-screen bg-gray-50 p-8">
+      <h1 className="text-3xl font-bold mb-8 text-center">NexusFlow Projects</h1>
+      <div className="max-w-xl mx-auto">
+        {projects.map(project => (
+          <ProjectCard key={project.id} project={project} />
+        ))}
+      </div>
     </div>
   );
 };
+// };
 
 export default InnovatorDashboard;

@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import { Button } from './ui/button';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { Card, CardHeader, CardTitle } from './ui/card';
+import ReactModal from 'react-modal';
 
 // Data model for a  project card
 export interface KanbanProject {
@@ -8,11 +12,8 @@ export interface KanbanProject {
   status: string;
   tags: string[];
   collaborators: string[];
+  budget?: string;
 }
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import ReactModal from 'react-modal';
 
 const initialProjects: KanbanProject[] = [
   {
@@ -22,6 +23,7 @@ const initialProjects: KanbanProject[] = [
     status: 'Idea & Research',
     tags: ['AI', 'Healthcare'],
     collaborators: ['Jane Doe', 'John Smith'],
+    budget: '$120,000',
   },
   {
     id: '2',
@@ -30,6 +32,7 @@ const initialProjects: KanbanProject[] = [
     status: 'IPR Filing',
     tags: ['Automation', 'IPR'],
     collaborators: ['Alice', 'Bob'],
+    budget: '$80,000',
   },
   {
     id: '3',
@@ -38,6 +41,7 @@ const initialProjects: KanbanProject[] = [
     status: 'Startup / Commercialization',
     tags: ['Startup', 'Growth'],
     collaborators: ['Eve'],
+    budget: '$200,000',
   },
 ];
 
@@ -64,8 +68,7 @@ function KanbanBoard() {
     { name: 'business-plan.pdf', size: '4.1 MB', date: '2024-02-05', tag: 'Startup / Commercialization' },
   ]);
   const [showAttachDoc, setShowAttachDoc] = useState(false);
-  const [newDocName, setNewDocName] = useState('');
-  const [newDocSize, setNewDocSize] = useState('');
+  const [newDocFile, setNewDocFile] = useState<File | null>(null);
 
   const onDragEnd = (result) => {
     if (!result.destination) return;
@@ -103,6 +106,7 @@ function KanbanBoard() {
         status: project.status,
         tags: [],
         collaborators: [],
+        budget: '',
       });
     } else {
       setIsAdding(false);
@@ -113,6 +117,7 @@ function KanbanBoard() {
         status: project.status || columns[0].key,
         tags: project.tags || [],
         collaborators: project.collaborators || [],
+        budget: project.budget || '',
       });
     }
     setModalOpen(true);
@@ -186,6 +191,7 @@ Key milestones include: ${timelineEvents.map(e => e.label).join(', ')}.`;
                               onClick={() => openModal(p)}
                             >
                               <Card className="border border-gray-200 bg-white cursor-pointer hover:shadow-lg transition">
+                                {/* Card header with title, description, tags, and budget */}
                                 <CardHeader className="flex flex-col gap-2">
                                   <div className="flex items-center gap-2">
                                     <span className="text-lg">{col.icon}</span>
@@ -194,8 +200,40 @@ Key milestones include: ${timelineEvents.map(e => e.label).join(', ')}.`;
                                   <div className="text-sm text-gray-500 line-clamp-2">{p.description}</div>
                                   <div className="flex flex-wrap gap-2 mt-1">
                                     {p.tags.map(tag => (
-                                      <span key={tag} className="px-2 py-1 rounded bg-blue-100 text-blue-800 text-xs font-semibold">{tag}</span>
+                                      <span key={tag} className="inline-block px-2 py-1 rounded bg-blue-100 text-blue-800 text-xs font-semibold whitespace-nowrap">{tag}</span>
                                     ))}
+                                  </div>
+                                  {p.budget && (
+                                    <div className="mt-2 text-xs text-green-700 font-semibold">Budget: {p.budget}</div>
+                                  )}
+                                  {/* Project Progress Bar - blue throughout */}
+                                  <div className="mt-3 flex flex-col items-center justify-center w-full">
+                                    <span className="text-xs text-blue-700 font-bold mb-1">Project Progress</span>
+                                    <div className="relative w-80 h-20 flex flex-col items-center justify-center">
+                                      {/* Strikethrough bar */}
+                                      <div className="absolute top-1/2 left-0 w-full h-2 -translate-y-1/2 bg-blue-200 rounded-full z-0"></div>
+                                      {/* Progress fill */}
+                                      <div className="absolute top-1/2 left-0 h-2 -translate-y-1/2 rounded-full z-10 transition-all duration-500" style={{ width: `${p.status === 'Idea & Research' ? '0%' : p.status === 'IPR Filing' ? '33%' : p.status === 'Startup / Commercialization' ? '66%' : p.status === 'Profitable Business' ? '100%' : '0%'}`, background: '#2563eb' }}></div>
+                                      {/* Milestone numbers */}
+                                      <div className="relative w-full flex justify-between items-center z-20">
+                                        {[0, 1, 2, 3].map(idx => {
+                                          const phases = ['Idea & Research', 'IPR Filing', 'Startup / Commercialization', 'Profitable Business'];
+                                          const labels = ['Ideate', 'Build', 'Launch', 'Grow'];
+                                          const active = phases.indexOf(p.status) >= idx;
+                                          return (
+                                            <div key={phases[idx]} className="flex flex-col items-center w-1/4">
+                                              <span className={`relative z-30 text-lg font-bold rounded-full w-8 h-8 flex items-center justify-center ${active ? 'bg-blue-500 text-white shadow-lg' : 'bg-blue-200 text-blue-500'}`}>{idx + 1}</span>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                      {/* Labels below numbers */}
+                                      <div className="absolute left-0 top-16 w-full flex justify-between items-center z-30">
+                                        {['Ideate', 'Build', 'Launch', 'Grow'].map((label, idx) => (
+                                          <span key={label} className="text-lg font-semibold text-blue-700 w-1/4 text-center">{label}</span>
+                                        ))}
+                                      </div>
+                                    </div>
                                   </div>
                                 </CardHeader>
                               </Card>
@@ -216,7 +254,7 @@ Key milestones include: ${timelineEvents.map(e => e.label).join(', ')}.`;
         isOpen={modalOpen}
         onRequestClose={closeModal}
         ariaHideApp={false}
-        className="max-w-2xl w-full mx-auto mt-8 bg-white rounded-xl shadow-2xl outline-none p-4 md:p-8 overflow-hidden"
+        className="max-w-6xl w-full mx-auto mt-8 bg-white rounded-2xl shadow-2xl outline-none p-4 md:p-16 overflow-hidden"
         overlayClassName="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
       >
         {selectedProject && (
@@ -289,6 +327,16 @@ Key milestones include: ${timelineEvents.map(e => e.label).join(', ')}.`;
                   }}
                 />
               </div>
+              {/* Add/Edit modal budget input */}
+              {isAdding && (
+                <input
+                  type="text"
+                  className="w-full border border-green-200 rounded-lg p-2 text-green-900 mb-2"
+                  placeholder="Project Budget (e.g. $50,000)"
+                  value={selectedProject.budget}
+                  onChange={e => setSelectedProject(sp => ({ ...sp, budget: e.target.value }))}
+                />
+              )}
               <div className="flex gap-2">
                 <Button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2.5 transition flex items-center justify-center gap-2">
                   <span>➕</span> Add Project
@@ -299,19 +347,29 @@ Key milestones include: ${timelineEvents.map(e => e.label).join(', ')}.`;
           ) : (
             <div>
               <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-blue-400 rounded-xl shadow-lg">
-                    <span className="text-white font-bold text-2xl">{columns.find(c => c.key === selectedProject.status)?.icon || '⚡'}</span>
+                <div className="flex items-start gap-6 w-full">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="p-3 bg-blue-400 rounded-xl shadow-lg">
+                      <span className="text-white font-bold text-2xl">{columns.find(c => c.key === selectedProject.status)?.icon || '⚡'}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <div className="flex flex-col items-start">
+                        <h2 className="text-3xl font-bold text-gray-900">{selectedProject.title}</h2>
+                        {/* Status badge - only expand to fit text, not title width */}
+                        <span className={`mt-2 px-3 py-1 rounded-full text-xs font-semibold ${statusColors[selectedProject.status] || 'bg-gray-100 text-gray-800'} whitespace-nowrap self-start`}>
+                          {selectedProject.status}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-3xl font-bold text-gray-900">{selectedProject.title}</h2>
-                    {/* Status badge */}
-                    <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${statusColors[selectedProject.status] || 'bg-gray-100 text-gray-800'}`}>
-                      {selectedProject.status}
-                    </span>
-                  </div>
+                  {selectedProject.budget && (
+                    <div className="flex flex-col items-end">
+                      <span className="uppercase text-xs font-bold tracking-widest text-gray-500 mb-1">Budget</span>
+                      <span className="text-4xl md:text-5xl font-extrabold text-blue-700 bg-gray-50 rounded-lg px-6 py-2 shadow border border-blue-100">{selectedProject.budget}</span>
+                    </div>
+                  )}
+                  <button onClick={closeModal} className="text-gray-400 hover:text-gray-700 text-xl ml-4">×</button>
                 </div>
-                <button onClick={closeModal} className="text-gray-400 hover:text-gray-700 text-xl">×</button>
               </div>
               <div className="text-gray-500 mb-2">Innovation Project Snapshot - Generated on 7/17/2025</div>
               <div className="mt-6">
@@ -402,47 +460,55 @@ Key milestones include: ${timelineEvents.map(e => e.label).join(', ')}.`;
                   </Button>
                 </div>
                 {showAttachDoc && (
-                  <form
-                    className="mt-4 flex flex-col gap-2 items-center"
-                    onSubmit={e => {
-                      e.preventDefault();
-                      if (newDocName.trim() && newDocSize.trim()) {
-                        setAttachedDocs(prev => [
-                          ...prev,
-                          {
-                            name: newDocName,
-                            size: newDocSize,
-                            date: new Date().toISOString().slice(0, 10),
-                            tag: selectedProject?.status || 'Unknown',
-                          },
-                        ]);
-                        setNewDocName('');
-                        setNewDocSize('');
-                        setShowAttachDoc(false);
-                      }
-                    }}
+                  <ReactModal
+                    isOpen={showAttachDoc}
+                    onRequestClose={() => setShowAttachDoc(false)}
+                    ariaHideApp={false}
+                    className="max-w-md w-full mx-auto mt-16 bg-white rounded-xl shadow-2xl outline-none p-8 flex flex-col items-center justify-center"
+                    overlayClassName="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
                   >
-                    <input
-                      type="text"
-                      className="border border-gray-200 rounded px-2 py-1 w-64"
-                      placeholder="Document Name (e.g. proposal.pdf)"
-                      value={newDocName}
-                      onChange={e => setNewDocName(e.target.value)}
-                      required
-                    />
-                    <input
-                      type="text"
-                      className="border border-gray-200 rounded px-2 py-1 w-64"
-                      placeholder="Size (e.g. 1.2 MB)"
-                      value={newDocSize}
-                      onChange={e => setNewDocSize(e.target.value)}
-                      required
-                    />
-                    <div className="flex gap-2">
-                      <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white">Attach</Button>
-                      <Button type="button" variant="outline" onClick={() => setShowAttachDoc(false)}>Cancel</Button>
+                    <div className="w-full flex flex-col items-center justify-center">
+                      <div className="text-lg font-semibold mb-4 text-gray-900">Upload Document</div>
+                      <label htmlFor="doc-upload" className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 mb-4 cursor-pointer hover:border-blue-400 transition">
+                        <span className="text-base">Drag & drop or click to upload</span>
+                        <input
+                          id="doc-upload"
+                          type="file"
+                          className="hidden"
+                          onChange={e => {
+                            if (e.target.files && e.target.files[0]) {
+                              setNewDocFile(e.target.files[0]);
+                            }
+                          }}
+                        />
+                      </label>
+                      {newDocFile && (
+                        <div className="w-full text-center text-sm text-gray-700 mb-2">Selected: {newDocFile.name} ({(newDocFile.size / (1024 * 1024)).toFixed(2)} MB)</div>
+                      )}
+                      <div className="flex gap-2 mt-2">
+                        <Button
+                          onClick={() => {
+                            if (newDocFile && selectedProject) {
+                              const newDoc = {
+                                name: newDocFile.name,
+                                size: `${(newDocFile.size / (1024 * 1024)).toFixed(2)} MB`,
+                                date: new Date().toISOString().slice(0, 10),
+                                tag: selectedProject.status,
+                              };
+                              setAttachedDocs(prev => [...prev, newDoc]);
+                              setNewDocFile(null);
+                              setShowAttachDoc(false);
+                            }
+                          }}
+                          disabled={!newDocFile}
+                          className="bg-green-500 hover:bg-green-600 text-white"
+                        >
+                          Upload
+                        </Button>
+                        <Button onClick={() => { setShowAttachDoc(false); setNewDocFile(null); }} variant="outline">Cancel</Button>
+                      </div>
                     </div>
-                  </form>
+                  </ReactModal>
                 )}
               </div>
             </div>
