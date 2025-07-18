@@ -1,5 +1,3 @@
-  // State for active domain filter
-  const [activeDomain, setActiveDomain] = useState<string>('');
 import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -58,6 +56,7 @@ function KanbanBoard() {
   const [searchValue, setSearchValue] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
+  const [activeDomain, setActiveDomain] = useState<string>('');
   const domainSuggestions = ['AI', 'Healthcare', 'Automation', 'IPR', 'Startup', 'Growth', 'Patent', 'Commercialization'];
   const [projects, setProjects] = useState<KanbanProject[]>(initialProjects);
   const [modalOpen, setModalOpen] = useState(false);
