@@ -35,6 +35,16 @@ const initialProjects: KanbanProject[] = [
     budget: '$80,000',
   },
   {
+    id: '4',
+    title: 'NexusFlow',
+    description: 'A central repository for the investors to know about the on-going projects in the industry and their scope.',
+    status: 'IPR Filing',
+    tags: ['Education'],
+    collaborators: [],
+    budget: '$100,000',
+    // progress: 'validation',
+  },
+  {
     id: '3',
     title: 'Startup Launchpad',
     description: 'Platform to accelerate startup growth.',
@@ -52,6 +62,8 @@ const columns = [
 ];
 
 function KanbanBoard() {
+  // Settings dropdown state
+  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
   // Search bar state and suggestions
   const [searchValue, setSearchValue] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -247,7 +259,22 @@ Key milestones include: ${timelineEvents.map(e => e.label).join(', ')}.`;
           <Button variant="outline" className="flex items-center gap-1"><span>🏠</span> Home</Button>
           <Button variant="outline" className="flex items-center gap-1" onClick={() => openModal({id: '', title: '', description: '', status: columns[0].key, tags: [], collaborators: []})}><span>➕</span> New Project</Button>
           <Button variant="outline" className="flex items-center gap-1"><span>👤</span> Profile</Button>
-          <Button variant="outline" className="flex items-center gap-1"><span>⚙️</span> Settings</Button>
+          <div className="relative inline-block">
+            <Button
+              variant="outline"
+              className="flex items-center gap-1"
+              onClick={() => setShowSettingsDropdown((prev) => !prev)}
+            >
+              <span>⚙️</span> Settings
+            </Button>
+            {showSettingsDropdown && (
+              <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded shadow-lg z-50">
+                <button className="block w-full text-left px-4 py-2 hover:bg-gray-100">Account Settings</button>
+                <button className="block w-full text-left px-4 py-2 hover:bg-gray-100">Theme</button>
+                <button className="block w-full text-left px-4 py-2 hover:bg-gray-100">Notifications</button>
+              </div>
+            )}
+          </div>
         </div>
       </nav>
       {/* Removed Kanban Board Title for cleaner look */}
@@ -323,13 +350,13 @@ Key milestones include: ${timelineEvents.map(e => e.label).join(', ')}.`;
                                     )}
                                     <div className="mt-3 flex flex-col items-center justify-center w-full">
                                       <span className="text-xs text-blue-700 font-bold mb-1">Project Progress</span>
-                                      <div className="relative w-80 h-20 flex flex-col items-center justify-center">
+                                      <div className="relative w-[28rem] h-20 flex flex-col items-center justify-center">
                                         <div className="absolute top-1/2 left-0 w-full h-2 -translate-y-1/2 bg-blue-200 rounded-full z-0"></div>
-                                        <div className="absolute top-1/2 left-0 h-2 -translate-y-1/2 rounded-full z-10 transition-all duration-500" style={{ width: `${p.status === 'Idea & Research' ? '0%' : p.status === 'IPR Filing' ? '33%' : p.status === 'Startup / Commercialization' ? '66%' : p.status === 'Profitable Business' ? '100%' : '0%'}`, background: '#2563eb' }}></div>
+                                        <div className="absolute top-1/2 left-0 h-2 -translate-y-1/2 rounded-full z-10 transition-all duration-500" style={{ width: `${p.status === 'Idea & Research' ? '25%' : p.status === 'IPR Filing' ? '50%' : p.status === 'Startup / Commercialization' ? '75%' : p.status === 'Profitable Business' ? '100%' : '0%'}`, background: '#2563eb' }}></div>
                                         <div className="relative w-full flex justify-between items-center z-20">
                                           {[0, 1, 2, 3].map(idx => {
                                             const phases = ['Idea & Research', 'IPR Filing', 'Startup / Commercialization', 'Profitable Business'];
-                                            const labels = ['Ideate', 'Build', 'Launch', 'Grow'];
+                                            const labels = ['Ideation', 'Validation', 'Traction', 'Scaling'];
                                             const active = phases.indexOf(p.status) >= idx;
                                             return (
                                               <div key={phases[idx]} className="flex flex-col items-center w-1/4">
@@ -339,7 +366,7 @@ Key milestones include: ${timelineEvents.map(e => e.label).join(', ')}.`;
                                           })}
                                         </div>
                                         <div className="absolute left-0 top-16 w-full flex justify-between items-center z-30">
-                                          {['Ideate', 'Build', 'Launch', 'Grow'].map((label, idx) => (
+                                          {['Ideation', 'Validation', 'Traction', 'Scaling'].map((label, idx) => (
                                             <span key={label} className="text-lg font-semibold text-blue-700 w-1/4 text-center">{label}</span>
                                           ))}
                                         </div>
