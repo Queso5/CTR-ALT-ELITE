@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,30 @@ import { useNavigate } from "react-router-dom";
 import ReactModal from 'react-modal';
 
 const AdminDashboard = () => {
+  // Comparison state
+  const [compareSelection, setCompareSelection] = useState([]);
+  const [showCompareModal, setShowCompareModal] = useState(false);
+
+  // Handle selection for comparison
+  const handleCompareSelect = (project) => {
+    setCompareSelection((prev) => {
+      if (prev.some(p => p.title === project.title)) {
+        // Deselect if already selected
+        return prev.filter(p => p.title !== project.title);
+      }
+      if (prev.length < 2) {
+        return [...prev, project];
+      }
+      // Replace the first if already two selected
+      return [prev[1], project];
+    });
+  };
+
+  // Open comparison modal if two selected
+  const openCompareModal = () => {
+    if (compareSelection.length === 2) setShowCompareModal(true);
+  };
+  const closeCompareModal = () => setShowCompareModal(false);
   const [sortOption, setSortOption] = useState('none');
   const [sortOrder, setSortOrder] = useState('asc');
   const sortOptions = [
@@ -19,11 +44,11 @@ const AdminDashboard = () => {
   const handleSortChange = (e) => setSortOption(e.target.value);
   const handleSortOrder = () => setSortOrder(order => order === 'asc' ? 'desc' : 'asc');
   const getProgressValue = (status) => {
-    switch (status) {
-      case 'Idea & Research': return 0;
-      case 'IPR Filing': return 33;
-      case 'Startup / Commercialization': return 66;
-      case 'Profitable Business': return 100;
+    switch ((status || '').toLowerCase()) {
+      case 'ideation': return 0;
+      case 'validation': return 33;
+      case 'traction': return 66;
+      case 'scaling': return 100;
       default: return 0;
     }
   };
@@ -55,6 +80,10 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [minBudget, setMinBudget] = useState("");
   const [maxBudget, setMaxBudget] = useState("");
+  // Budget slider modal state
+  const [showFilter, setShowFilter] = useState(false);
+  const [sliderBudget, setSliderBudget] = useState(1000000);
+  const [sliderActive, setSliderActive] = useState(false);
 
   // Helper to parse budget string to number
   const parseBudget = (budget) => {
@@ -91,14 +120,93 @@ const AdminDashboard = () => {
       budget: "$120,000",
       description: "A system to monitor patient health using AI.",
       tags: ["AI", "Healthcare"],
-      collaborators: ["Jane Doe", "John Smith"],
+      collaborators: ["Amit Sharma", "Priya Singh"],
+      contact: {
+        name: "Jane Doe",
+        email: "janedoe@gmail.com",
+        phone: "+91 9876543210"
+      }
     },
-    { title: "Smart City Traffic System", innovator: "John Smith", status: "validation", dateCreated: "2025-05-05", budget: "$25,000" },
-    { title: "Sustainable Energy Storage", innovator: "Sarah Johnson", status: "traction", dateCreated: "2024-03-22", budget: "$18,500" },
-    { title: "Voice-Controlled IoT Platform", innovator: "Mike Chen", status: "ideation", dateCreated: "2024-09-09", budget: "$9,000" },
-    { title: "Blockchain Supply Chain", innovator: "Emma Wilson", status: "validation", dateCreated: "2024-07-14", budget: "$22,000" },
-    { title: "AR Educational Platform", innovator: "David Brown", status: "traction", dateCreated: "2024-11-28", budget: "$15,000" },
+    {
+      title: "Smart City Traffic System",
+      innovator: "Rahul Verma",
+      status: "validation",
+      dateCreated: "2025-05-05",
+      budget: "$25,000",
+      description: "An IoT-based traffic management platform for smart cities, optimizing traffic flow and reducing congestion using real-time data analytics.",
+      tags: ["IoT", "Smart City", "Traffic"],
+      collaborators: ["Sonal Gupta", "Rohit Sinha"],
+      contact: {
+        name: "Rahul Verma",
+        email: "rahulverma@gmail.com",
+        phone: "+91 9123456789"
+      }
+    },
+    {
+      title: "Sustainable Energy Storage",
+      innovator: "Sneha Patel",
+      status: "traction",
+      dateCreated: "2024-03-22",
+      budget: "$18,500",
+      description: "A novel battery technology for efficient and eco-friendly energy storage, supporting renewable energy integration.",
+      tags: ["Energy", "Sustainability", "Battery"],
+      collaborators: ["Karan Mehta", "Deepa Joshi"],
+      contact: {
+        name: "Sneha Patel",
+        email: "snehapatel@gmail.com",
+        phone: "+91 9988776655"
+      }
+    },
+    {
+      title: "Voice-Controlled IoT Platform",
+      innovator: "Arjun Nair",
+      status: "ideation",
+      dateCreated: "2024-09-09",
+      budget: "$9,000",
+      description: "A platform enabling voice commands to control IoT devices in homes and industries, enhancing accessibility and automation.",
+      tags: ["IoT", "Voice", "Automation"],
+      collaborators: ["Neha Reddy", "Suresh Kumar"],
+      contact: {
+        name: "Arjun Nair",
+        email: "arjunnair@gmail.com",
+        phone: "+91 9001122334"
+      }
+    },
+    {
+      title: "Blockchain Supply Chain",
+      innovator: "Meera Iyer",
+      status: "validation",
+      dateCreated: "2024-07-14",
+      budget: "$22,000",
+      description: "A blockchain-based solution for transparent and tamper-proof supply chain management, improving traceability and trust.",
+      tags: ["Blockchain", "Supply Chain", "Transparency"],
+      collaborators: ["Anil Kapoor", "Ritika Shah"],
+      contact: {
+        name: "Meera Iyer",
+        email: "meera.iyer@gmail.com",
+        phone: "+91 9876012345"
+      }
+    },
+    {
+      title: "AR Educational Platform",
+      innovator: "Vikram Desai",
+      status: "traction",
+      dateCreated: "2024-11-28",
+      budget: "$15,000",
+      description: "An augmented reality platform to make learning interactive and immersive for students across various subjects.",
+      tags: ["AR", "Education", "Learning"],
+      collaborators: ["Pooja Agarwal", "Manish Tiwari"],
+      contact: {
+        name: "Vikram Desai",
+        email: "vikramdesai@gmail.com",
+        phone: "+91 9090909090"
+      }
+    },
   ];
+  // State for innovator contact modal
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [contactInfo, setContactInfo] = useState(null);
+
 
   // Filtered projects
   const filteredProjects = allProjects.filter(project => {
@@ -106,6 +214,10 @@ const AdminDashboard = () => {
       project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.innovator.toLowerCase().includes(searchTerm.toLowerCase());
     const budget = parseBudget(project.budget || "");
+    // Slider filter takes precedence if active
+    if (sliderActive) {
+      return matchesSearch && budget <= sliderBudget && budget >= 1000;
+    }
     const min = minBudget ? parseFloat(minBudget) : null;
     const max = maxBudget ? parseFloat(maxBudget) : null;
     const matchesBudget =
@@ -164,6 +276,8 @@ const AdminDashboard = () => {
     }
   };
 
+  // Ensure all functions and blocks are closed before return
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -195,7 +309,10 @@ const AdminDashboard = () => {
             placeholder="Search by project or innovator..."
             className="border border-gray-300 rounded-lg px-4 py-2 w-full md:w-1/3 focus:outline-none focus:ring-2 focus:ring-blue-400"
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
+            onChange={e => {
+              setSearchTerm(e.target.value);
+              if (sliderActive) setSliderActive(false);
+            }}
           />
           <div className="flex gap-2 items-center">
             <input
@@ -204,7 +321,11 @@ const AdminDashboard = () => {
               placeholder="Min Budget ($)"
               className="border border-gray-300 rounded-lg px-3 py-2 w-32 focus:outline-none focus:ring-2 focus:ring-blue-400"
               value={minBudget}
-              onChange={e => setMinBudget(e.target.value)}
+              onChange={e => {
+                setMinBudget(e.target.value);
+                if (sliderActive) setSliderActive(false);
+              }}
+              disabled={sliderActive}
             />
             <span className="text-gray-500">-</span>
             <input
@@ -213,8 +334,22 @@ const AdminDashboard = () => {
               placeholder="Max Budget ($)"
               className="border border-gray-300 rounded-lg px-3 py-2 w-32 focus:outline-none focus:ring-2 focus:ring-blue-400"
               value={maxBudget}
-              onChange={e => setMaxBudget(e.target.value)}
+              onChange={e => {
+                setMaxBudget(e.target.value);
+                if (sliderActive) setSliderActive(false);
+              }}
+              disabled={sliderActive}
             />
+            {sliderActive && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-2"
+                onClick={() => { setSliderActive(false); setSliderBudget(5000000); }}
+              >
+                Clear Filter
+              </Button>
+            )}
           </div>
         </div>
         {/* Analytics Widgets */}
@@ -262,8 +397,19 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
-        {/* Projects Table */}
+        {/* Projects Table & Compare Button */}
         <Card className="border-border/50 bg-card">
+          {/* Compare Button */}
+          <div className="flex justify-end mb-2">
+            <Button
+              variant="default"
+              disabled={compareSelection.length !== 2}
+              onClick={openCompareModal}
+              className="bg-blue-600 text-white"
+            >
+              Compare Selected Projects
+            </Button>
+          </div>
           <CardHeader>
             <div className="flex items-center justify-between w-full mb-6">
               <div className="flex items-center gap-4">
@@ -288,6 +434,53 @@ const AdminDashboard = () => {
                       )}
                     </svg>
                   </Button>
+                  {/* Filter button with funnel icon (moved here) */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-1 ml-2"
+                    title="Filter by budget (slider)"
+                    onClick={() => setShowFilter(true)}
+                  >
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="mr-1">
+                      <polygon points="3 4 21 4 14 14 14 19 10 19 10 14 3 4" fill="#3b82f6" stroke="#2563eb" />
+                      <rect x="10" y="19" width="4" height="2" rx="1" fill="#2563eb" />
+                    </svg>
+                    Filter
+                  </Button>
+                  {/* Budget slider modal (remains global, not inside table header) */}
+                  {showFilter && (
+                    <ReactModal
+                      isOpen={showFilter}
+                      onRequestClose={() => setShowFilter(false)}
+                      ariaHideApp={false}
+                      className="max-w-md w-full mx-auto mt-16 bg-white rounded-xl shadow-2xl outline-none p-8 flex flex-col items-center justify-center"
+                      overlayClassName="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+                    >
+                      <div className="w-full flex flex-col items-center justify-center">
+                        <div className="text-lg font-semibold mb-4 text-gray-900">Filter by Budget</div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Budget Range ($)</label>
+                        <input
+                          type="range"
+                          min={1000}
+                          max={1000000}
+                          step={1000}
+                          value={sliderBudget}
+                          onChange={e => setSliderBudget(Number(e.target.value))}
+                          className="w-full mb-2"
+                        />
+                        <div className="flex justify-between w-full text-xs text-gray-500 mt-1">
+                          <span>$1,000</span>
+                          <span>$1,000,000</span>
+                        </div>
+                        <div className="mt-4 text-blue-700 font-bold">Selected: ${sliderBudget.toLocaleString()}</div>
+                        <div className="flex gap-2 mt-6">
+                          <Button onClick={() => { setSliderActive(true); setShowFilter(false); }} className="bg-blue-500 hover:bg-blue-600 text-white">Apply</Button>
+                          <Button onClick={() => { setSliderBudget(1000000); setSliderActive(false); setShowFilter(false); }} variant="outline">Reset</Button>
+                        </div>
+                      </div>
+                    </ReactModal>
+                  )}
                 </div>
               </div>
               <CardDescription className="text-muted-foreground">
@@ -303,7 +496,7 @@ const AdminDashboard = () => {
                     <TableHead className="text-foreground">Project Title</TableHead>
                     <TableHead className="text-foreground">Innovator Name</TableHead>
                     <TableHead className="text-foreground">Status</TableHead>
-                    <TableHead className="text-foreground">Budget</TableHead>
+                    <TableHead className="text-foreground text-center">Ask</TableHead>
                     <TableHead className="text-foreground text-center">Progress</TableHead>
                     <TableHead className="text-foreground">Date Created</TableHead>
                   </TableRow>
@@ -314,82 +507,164 @@ const AdminDashboard = () => {
                       <TableCell colSpan={6} className="text-center text-blue-500 py-8 font-semibold">No projects found</TableCell>
                     </TableRow>
                   ) : (
-                    sortedProjects.map((project, index) => (
-                      <TableRow
-                        key={index}
-                        className="border-border cursor-pointer hover:bg-blue-50 transition"
-                        onClick={() => openModal(project)}
-                      >
-                        <TableCell className="font-medium text-foreground">{project.title}</TableCell>
-                        <TableCell className="text-foreground">{project.innovator}</TableCell>
-                        <TableCell>
-                          <span
-                            className={`inline-block px-4 py-1 rounded-full font-semibold text-sm shadow ${getStatusColor(project.status)}`}
-                            style={{ minWidth: 90, textAlign: 'center' }}
+                    <>
+                      {sortedProjects.map((project, index) => {
+                        const isSelected = compareSelection.some(p => p.title === project.title);
+                        return (
+                          <TableRow
+                            key={index}
+                            className={`border-border cursor-pointer hover:bg-blue-50 transition ${isSelected ? 'ring-2 ring-blue-400' : ''}`}
+                            onClick={() => openModal(project)}
                           >
-                            {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-green-700 font-semibold">{project.budget || "-"}</TableCell>
-                        <TableCell className="text-center align-middle">
-                          <div className="flex flex-col items-center justify-center w-full">
-                            <div className="relative w-64 h-14 flex flex-col items-center justify-center">
-                              {/* Strikethrough progress bar */}
-                              <div className="absolute top-1/2 left-0 w-full h-2 -translate-y-1/2 bg-blue-200 rounded-full z-0"></div>
-                              {(() => {
-                                const status = (project.status || '').toLowerCase();
-                                let progress = 0;
-                                if (status === 'ideation') progress = 1;
-                                else if (status === 'validation') progress = 2;
-                                else if (status === 'traction') progress = 3;
-                                else if (status === 'scaling') progress = 4;
-                                // Highlight line from start to first node for milestone 1
-                                let percent = 0;
-                                if (progress === 1) percent = 16.5; // visually reaches first node
-                                else if (progress === 2) percent = 33;
-                                else if (progress === 3) percent = 66;
-                                else if (progress === 4) percent = 100;
-                                return (
-                                  <div
-                                    className="absolute top-1/2 left-0 h-2 -translate-y-1/2 rounded-full z-10 transition-all duration-500"
-                                    style={{ width: `${percent}%`, background: '#2563eb' }}
-                                  ></div>
-                                );
-                              })()}
-                              <div className="relative w-full flex justify-between items-center z-20">
-                                {[0, 1, 2, 3].map(idx => {
-                                  const phases = ['ideation', 'validation', 'traction', 'scaling'];
-                                  const labels = ['Ideation', 'Validation', 'Traction', 'Scaling'];
-                                  const tooltips = [
-                                    'Problem identified, solution imagined, no validation yet.',
-                                    'MVP built, feedback collected, demand confirmed.',
-                                    'Early users/customers, engagement, product-market fit.',
-                                    'Scaling team/product/customers, growth processes, rapid revenue/user growth.'
-                                  ];
-                                  const status = (project.status || '').toLowerCase();
-                                  const active = phases.indexOf(status) >= idx;
-                                  return (
-                                    <div key={phases[idx]} className="flex flex-col items-center w-1/4">
-                                      <span
-                                        className={`relative z-30 text-base font-bold rounded-full w-7 h-7 flex items-center justify-center ${active ? 'bg-blue-500 text-white shadow-lg' : 'bg-blue-200 text-blue-500'}`}
-                                        title={tooltips[idx]}
-                                      >{idx + 1}</span>
-                                    </div>
-                                  );
-                                })}
+                            <TableCell className="font-medium text-foreground flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={e => {
+                                  e.stopPropagation();
+                                  handleCompareSelect(project);
+                                }}
+                                onClick={e => e.stopPropagation()}
+                                className="accent-blue-600"
+                                disabled={
+                                  !isSelected && compareSelection.length === 2
+                                }
+                              />
+                              {project.title}
+                            </TableCell>
+                            <TableCell className="text-foreground">
+                              <button
+                                className="text-blue-700 underline hover:text-blue-900 focus:outline-none"
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  setContactInfo(project.contact);
+                                  setContactModalOpen(true);
+                                }}
+                              >
+                                {project.innovator}
+                              </button>
+                            </TableCell>
+      {/* Innovator Contact Modal */}
+      <ReactModal
+        isOpen={contactModalOpen}
+        onRequestClose={() => setContactModalOpen(false)}
+        ariaHideApp={false}
+        className="max-w-md w-full mx-auto mt-24 bg-white rounded-2xl shadow-2xl outline-none p-8"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+      >
+        {contactInfo && (
+          <div className="flex flex-col gap-4 items-center">
+            <h2 className="text-2xl font-bold mb-2 text-blue-800">Innovator Contact Details</h2>
+            <div className="w-full flex flex-col gap-2">
+              <div><span className="font-semibold">Name:</span> {contactInfo.name}</div>
+              <div><span className="font-semibold">Gmail:</span> {contactInfo.email}</div>
+              <div><span className="font-semibold">Contact Number:</span> {contactInfo.phone}</div>
+            </div>
+            <Button onClick={() => setContactModalOpen(false)} className="mt-4 bg-blue-600 text-white">Close</Button>
+          </div>
+        )}
+      </ReactModal>
+                            <TableCell>
+                              <span
+                                className={`inline-block px-4 py-1 rounded-full font-semibold text-sm shadow ${getStatusColor(project.status)}`}
+                                style={{ minWidth: 90, textAlign: 'center' }}
+                              >
+                                {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-green-700 font-semibold">{project.budget || "-"}</TableCell>
+                            <TableCell className="text-center align-middle">
+                              <div className="flex flex-col items-center justify-center w-full">
+                                <div className="relative w-64 h-14 flex flex-col items-center justify-center">
+                                  {/* Strikethrough progress bar */}
+                                  <div className="absolute top-1/2 left-0 w-full h-2 -translate-y-1/2 bg-blue-200 rounded-full z-0"></div>
+                                  {(() => {
+                                    const status = (project.status || '').toLowerCase();
+                                    let progress = 0;
+                                    if (status === 'ideation') progress = 1;
+                                    else if (status === 'validation') progress = 2;
+                                    else if (status === 'traction') progress = 3;
+                                    else if (status === 'scaling') progress = 4;
+                                    // Highlight line from start to first node for milestone 1
+                                    let percent = 0;
+                                    if (progress === 1) percent = 16.5; // visually reaches first node
+                                    else if (progress === 2) percent = 33;
+                                    else if (progress === 3) percent = 66;
+                                    else if (progress === 4) percent = 100;
+                                    return (
+                                      <div
+                                        className="absolute top-1/2 left-0 h-2 -translate-y-1/2 rounded-full z-10 transition-all duration-500"
+                                        style={{ width: `${percent}%`, background: '#2563eb' }}
+                                      ></div>
+                                    );
+                                  })()}
+                                  <div className="relative w-full flex justify-between items-center z-20">
+                                    {[0, 1, 2, 3].map(idx => {
+                                      const phases = ['ideation', 'validation', 'traction', 'scaling'];
+                                      const labels = ['Ideation', 'Validation', 'Traction', 'Scaling'];
+                                      const tooltips = [
+                                        'Problem identified, solution imagined, no validation yet.',
+                                        'MVP built, feedback collected, demand confirmed.',
+                                        'Early users/customers, engagement, product-market fit.',
+                                        'Scaling team/product/customers, growth processes, rapid revenue/user growth.'
+                                      ];
+                                      const status = (project.status || '').toLowerCase();
+                                      const active = phases.indexOf(status) >= idx;
+                                      return (
+                                        <div key={phases[idx]} className="flex flex-col items-center w-1/4">
+                                          <span
+                                            className={`relative z-30 text-base font-bold rounded-full w-7 h-7 flex items-center justify-center ${active ? 'bg-blue-500 text-white shadow-lg' : 'bg-blue-200 text-blue-500'}`}
+                                            title={tooltips[idx]}
+                                          >{idx + 1}</span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  <div className="absolute left-0 top-12 w-full flex justify-between items-center z-30">
+                                    {['Ideation', 'Validation', 'Traction', 'Scaling'].map((label, idx) => (
+                                      <span key={label} className="text-sm font-semibold text-blue-700 w-1/4 text-center">{label}</span>
+                                    ))}
+                                  </div>
+                                </div>
                               </div>
-                              <div className="absolute left-0 top-12 w-full flex justify-between items-center z-30">
-                                {['Ideation', 'Validation', 'Traction', 'Scaling'].map((label, idx) => (
-                                  <span key={label} className="text-sm font-semibold text-blue-700 w-1/4 text-center">{label}</span>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">{formatDate(project.dateCreated)}</TableCell>
-                      </TableRow>
-                    ))
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">{formatDate(project.dateCreated)}</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </>
                   )}
+                  {/* Project Comparison Modal */}
+                  <ReactModal
+                    isOpen={showCompareModal}
+                    onRequestClose={closeCompareModal}
+                    ariaHideApp={false}
+                    className="max-w-3xl w-full mx-auto mt-16 bg-white rounded-2xl shadow-2xl outline-none p-8"
+                    overlayClassName="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+                  >
+                    {compareSelection.length === 2 && (
+                      <div>
+                        <h2 className="text-2xl font-bold mb-6 text-center text-gray-900">Project Comparison</h2>
+                        <div className="grid grid-cols-2 gap-8">
+                          {compareSelection.map((proj, idx) => (
+                            <div key={proj.title} className="border rounded-xl p-6 bg-gray-50">
+                              <h3 className="text-xl font-bold mb-2 text-blue-700">{proj.title}</h3>
+                              <div className="mb-2"><span className="font-semibold">Innovator:</span> {proj.innovator}</div>
+                              <div className="mb-2"><span className="font-semibold">Status:</span> {proj.status}</div>
+                              <div className="mb-2"><span className="font-semibold">Ask:</span> {proj.budget}</div>
+                              <div className="mb-2"><span className="font-semibold">Date Created:</span> {formatDate(proj.dateCreated)}</div>
+                              <div className="mb-2"><span className="font-semibold">Tags:</span> {proj.tags?.join(', ') || '-'}</div>
+                              <div className="mb-2"><span className="font-semibold">Collaborators:</span> {proj.collaborators?.join(', ') || '-'}</div>
+                              <div className="mb-2"><span className="font-semibold">Description:</span> <span className="text-gray-700">{proj.description || '-'}</span></div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex justify-center mt-8">
+                          <Button onClick={closeCompareModal} variant="default" className="bg-blue-600 text-white">Close</Button>
+                        </div>
+                      </div>
+                    )}
+                  </ReactModal>
                 </TableBody>
               </Table>
             </div>
